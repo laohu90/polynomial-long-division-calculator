@@ -30,7 +30,7 @@ export const PracticeProblems: React.FC<PracticeProblemsProps> = ({
   };
 
   return (
-    <section className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xs">
+    <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-7 shadow-xs">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full inline-flex items-center gap-1.5">

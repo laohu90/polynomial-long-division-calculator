@@ -3,25 +3,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Calculator,
   RotateCcw,
-  Sparkles,
   Copy,
   Check,
   Printer,
   Keyboard,
   Globe,
-  Share2,
-  BookOpen,
   HelpCircle,
   Code2,
   SquareFunction,
-  ChevronRight,
   AlertCircle,
-  ExternalLink,
+  BookOpen,
   Target,
+  Sparkles,
+  ChevronDown,
 } from 'lucide-react';
 import { Polynomial } from './math/polynomial';
 import { performPolynomialLongDivision, LongDivisionResult } from './math/longDivision';
@@ -43,7 +41,7 @@ export default function App() {
   const [lang, setLang] = useState<Language>('en');
   const t = translations[lang];
 
-  // Dynamically update document title, meta description, and html lang attribute for Google SEO
+  // Dynamically update document title and meta description for SEO
   useEffect(() => {
     document.documentElement.lang = lang;
     const titles: Record<Language, string> = {
@@ -80,6 +78,7 @@ export default function App() {
   const [activeInput, setActiveInput] = useState<'dividend' | 'divisor' | 'quadratic'>('dividend');
   const [showKeypad, setShowKeypad] = useState<boolean>(false);
   const [showPadding, setShowPadding] = useState<boolean>(true);
+  const [showPresetsDropdown, setShowPresetsDropdown] = useState<boolean>(false);
 
   // Stepper state for Long Division
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
@@ -118,11 +117,9 @@ export default function App() {
       const res = performPolynomialLongDivision(dividendPoly, divisorPoly);
       setDivisionResult(res);
 
-      // Perform synthetic division if divisor is linear
       const syn = performSyntheticDivision(dividendPoly, divisorPoly);
       setSyntheticResult(syn);
 
-      // Reset step index
       setCurrentStepIndex(0);
       setShowAllSteps(true);
     } catch (err: any) {
@@ -149,41 +146,21 @@ export default function App() {
     handleCalculateCompletingSquare();
   }, []);
 
-  // Presets for quick practice
+  // Presets
   const divisionPresets = [
-    {
-      title: 'High School Classic (x - 2)',
-      dividend: '2x^3 - x^2 - 7x + 2',
-      divisor: 'x - 2',
-    },
-    {
-      title: 'Missing Degree Gap (x⁴ - 16)',
-      dividend: 'x^4 - 16',
-      divisor: 'x - 2',
-    },
-    {
-      title: 'Precalculus Slant Asymptote',
-      dividend: '3x^3 + 2x^2 - x + 5',
-      divisor: 'x^2 + 1',
-    },
-    {
-      title: 'Non-Monic Divisor (2x - 3)',
-      dividend: '4x^3 - 6x^2 + 2x - 1',
-      divisor: '2x - 3',
-    },
-    {
-      title: 'Quadratic Divisor (x² - 3x + 2)',
-      dividend: 'x^4 - 2x^3 + 3x^2 - 4x + 5',
-      divisor: 'x^2 - 3x + 2',
-    },
+    { title: 'Classic (x - 2)', dividend: '2x^3 - x^2 - 7x + 2', divisor: 'x - 2' },
+    { title: 'Missing Terms (x⁴ - 16)', dividend: 'x^4 - 16', divisor: 'x - 2' },
+    { title: 'Slant Asymptote', dividend: '3x^3 + 2x^2 - x + 5', divisor: 'x^2 + 1' },
+    { title: 'Divisor (2x - 3)', dividend: '4x^3 - 6x^2 + 2x - 1', divisor: '2x - 3' },
+    { title: 'Quadratic Divisor', dividend: 'x^4 - 2x^3 + 3x^2 - 4x + 5', divisor: 'x^2 - 3x + 2' },
   ];
 
   const quadraticPresets = [
     { title: 'Standard (a = 2)', formula: '2x^2 + 8x - 10' },
-    { title: 'Monic Quadratic', formula: 'x^2 - 6x + 5' },
-    { title: 'Fractional Half (Odd b)', formula: 'x^2 + 5x + 3' },
-    { title: 'Negative Parabola (Max)', formula: '-x^2 + 4x + 12' },
-    { title: 'Complex Roots', formula: 'x^2 + 2x + 5' },
+    { title: 'Monic x² - 6x + 5', formula: 'x^2 - 6x + 5' },
+    { title: 'Fractional Half x² + 5x + 3', formula: 'x^2 + 5x + 3' },
+    { title: 'Negative Peak -x² + 4x + 12', formula: '-x^2 + 4x + 12' },
+    { title: 'Complex Roots x² + 2x + 5', formula: 'x^2 + 2x + 5' },
   ];
 
   // Keypad insert handlers
@@ -223,7 +200,7 @@ export default function App() {
     }
   };
 
-  // Copy solution to clipboard
+  // Copy Markdown
   const handleCopyMarkdown = () => {
     if (mode === 'division' && divisionResult) {
       let md = `## Polynomial Long Division Solution\n\n`;
@@ -234,7 +211,7 @@ export default function App() {
       md += `$$(${divisionResult.dividend.toString()}) = (${divisionResult.divisor.toString()}) \\cdot (${divisionResult.quotient.toString()}) + (${divisionResult.remainder.toString()})$$\n\n`;
       md += `### Step-by-Step Breakdown:\n`;
       divisionResult.steps.forEach((s) => {
-        md += `1. **Step ${s.stepNumber}:** Divide leading term -> ${s.explanation.divide}\n`;
+        md += `1. **Step ${s.stepNumber}:** ${s.explanation.divide}\n`;
         md += `   - Multiply: ${s.explanation.multiply}\n`;
         md += `   - Subtract & Flip Signs: ${s.explanation.subtract}\n`;
         if (s.broughtDownTerm) md += `   - Bring Down: ${s.explanation.bringDown}\n`;
@@ -249,7 +226,7 @@ export default function App() {
       md += `**Vertex:** \`(${completingSquareResult.vertex.hDisplay}, ${completingSquareResult.vertex.kDisplay})\`\n`;
       md += `**Axis of Symmetry:** \`${completingSquareResult.axisOfSymmetry}\`\n`;
       md += `**Roots:** \`${completingSquareResult.roots.display}\`\n\n`;
-      md += `### Step-by-Step Steps:\n`;
+      md += `### Steps:\n`;
       completingSquareResult.steps.forEach((st) => {
         md += `1. **Step ${st.stepNumber} (${st.title}):** ${st.expression}\n   - ${st.description}\n`;
       });
@@ -293,261 +270,258 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-white text-slate-800 flex flex-col font-sans">
-      {/* TOP HEADER */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-40 backdrop-blur-md bg-white/95">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
-          {/* Brand Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-800 flex items-center justify-center text-white shadow-md shadow-indigo-200">
-              <Calculator className="w-5 h-5" />
+      {/* CLEAN MINIMAL HEADER */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+          {/* Logo & Identity */}
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-base shadow-xs">
+              ÷
             </div>
             <div>
-              <span className="font-extrabold text-lg sm:text-xl text-slate-900 tracking-tight flex items-center gap-1.5">
-                PolyMath <span className="text-indigo-600 font-semibold text-xs px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-100">PRO</span>
+              <span className="font-extrabold text-lg text-slate-900 tracking-tight">
+                PolyMath
               </span>
-              <p className="text-[11px] text-slate-500 font-medium hidden sm:block">
-                Algebra 2 & Precalculus Step-by-Step Solver
-              </p>
+              <span className="text-xs text-slate-500 font-medium ml-2 hidden sm:inline">
+                Step-by-Step Algebra Solver
+              </span>
             </div>
           </div>
 
-          {/* Mode Switcher Buttons */}
-          <div className="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold">
+          {/* Clean Segmented Mode Control */}
+          <div className="inline-flex bg-slate-100 p-1 rounded-xl text-xs sm:text-sm font-semibold">
             <button
               onClick={() => {
                 setMode('division');
                 setActiveInput('dividend');
               }}
-              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-lg transition-all ${
                 mode === 'division'
-                  ? 'bg-white text-indigo-700 shadow-xs font-bold'
+                  ? 'bg-white text-slate-900 shadow-xs font-bold'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Calculator className="w-3.5 h-3.5" />
-              <span>{t.navDivision}</span>
+              {t.navDivision}
             </button>
             <button
               onClick={() => {
                 setMode('completing_square');
                 setActiveInput('quadratic');
               }}
-              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-lg transition-all ${
                 mode === 'completing_square'
-                  ? 'bg-white text-emerald-700 shadow-xs font-bold'
+                  ? 'bg-white text-slate-900 shadow-xs font-bold'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <SquareFunction className="w-3.5 h-3.5" />
-              <span>{t.navCompleteSquare}</span>
+              {t.navCompleteSquare}
             </button>
           </div>
 
-          {/* Right Actions: Language Picker & Guide Link */}
-          <div className="flex items-center gap-2">
+          {/* Language Picker & Quick Navigation */}
+          <div className="flex items-center gap-3">
             <div className="relative flex items-center">
-              <Globe className="w-4 h-4 text-slate-400 absolute left-2.5 pointer-events-none" />
+              <Globe className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 pointer-events-none" />
               <select
                 value={lang}
                 onChange={(e) => setLang(e.target.value as Language)}
-                className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+                className="pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 hover:border-slate-300 focus:outline-none cursor-pointer"
                 aria-label="Select Language"
               >
-                <option value="en">🇺🇸 English</option>
-                <option value="es">🇪🇸 Español</option>
-                <option value="fr">🇫🇷 Français</option>
-                <option value="pt">🇧🇷 Português</option>
+                <option value="en">🇺🇸 EN</option>
+                <option value="es">🇪🇸 ES</option>
+                <option value="fr">🇫🇷 FR</option>
+                <option value="pt">🇧🇷 PT</option>
                 <option value="zh">🇨🇳 中文</option>
               </select>
             </div>
 
             <a
-              href="#faqs"
-              className="text-xs font-semibold text-slate-600 hover:text-indigo-600 px-2 py-1.5 rounded-lg hover:bg-slate-50 transition hidden md:inline-flex items-center gap-1"
+              href="#study-guide"
+              className="text-xs font-medium text-slate-600 hover:text-slate-900 hidden md:block"
             >
-              <HelpCircle className="w-3.5 h-3.5" />
-              <span>{t.navFaq}</span>
+              {t.navGuide}
             </a>
           </div>
         </div>
       </header>
 
-      {/* HERO SECTION */}
-      <div className="bg-gradient-to-b from-slate-50 to-white border-b border-slate-200/60 py-8 sm:py-12 px-4 sm:px-6">
-        <div className="max-w-4xl mx-auto text-center space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-xs font-bold text-indigo-700">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-            <span>US Curriculum Aligned: Common Core HSF-BF & HSA-APR</span>
-          </div>
-
-          <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-            {mode === 'division' ? t.heroTagline : 'Completing the Square Calculator with Steps'}
+      {/* COMPACT CLEAN PAGE HERO */}
+      <div className="border-b border-slate-100 bg-slate-50/50 py-6 sm:py-8 px-4 sm:px-6">
+        <div className="max-w-4xl mx-auto text-center space-y-2">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            {mode === 'division' ? t.heroTagline : t.navCompleteSquare}
           </h1>
-
-          <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-500 max-w-xl mx-auto leading-relaxed">
             {mode === 'division'
-              ? t.heroSubtitle
-              : 'Effortlessly transform standard quadratic equations ax² + bx + c into vertex form a(x - h)² + k. Step-by-step breakdown of the "half & square" trick, vertex coordinates, line of symmetry, and exact roots.'}
+              ? 'Enter dividend and divisor to see the aligned bus-stop division bracket, sign-flip subtraction, and proof.'
+              : 'Enter a quadratic polynomial ax² + bx + c to get vertex form, coordinates, axis of symmetry, and roots.'}
           </p>
         </div>
       </div>
 
-      {/* MAIN CALCULATOR CONTAINER */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 flex-1 w-full space-y-8">
+      {/* MAIN CONTAINER */}
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 w-full space-y-8">
         {/* INPUT CARD */}
-        <div className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-8 shadow-xs relative">
-          {/* Quick Presets Bar */}
-          <div className="mb-6 pb-4 border-b border-slate-100">
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                {t.presetsTitle}
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {mode === 'division'
-                ? divisionPresets.map((p, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => {
-                        setDividendInput(p.dividend);
-                        setDivisorInput(p.divisor);
-                        handleCalculateDivision(p.dividend, p.divisor);
-                      }}
-                      className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 border border-slate-200 text-slate-700 transition"
-                    >
-                      {p.title}
-                    </button>
-                  ))
-                : quadraticPresets.map((p, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => {
-                        setQuadraticInput(p.formula);
-                        handleCalculateCompletingSquare(p.formula);
-                      }}
-                      className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 border border-slate-200 text-slate-700 transition"
-                    >
-                      {p.title}
-                    </button>
-                  ))}
-            </div>
-          </div>
-
-          {/* INPUT FORM */}
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-7 shadow-xs">
           {mode === 'division' ? (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Dividend Input */}
                 <div>
-                  <label className="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5">
-                    {t.dividendLabel}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={dividendInput}
-                      onFocus={() => setActiveInput('dividend')}
-                      onChange={(e) => setDividendInput(e.target.value)}
-                      placeholder={t.dividendPlaceholder}
-                      className="w-full px-4 py-3 bg-slate-50/70 border border-slate-200 rounded-xl text-base sm:text-lg font-mono font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition shadow-2xs"
-                    />
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-bold text-slate-700">
+                      {t.dividendLabel}
+                    </label>
                   </div>
-                  <span className="text-[11px] text-slate-400 mt-1 block">
-                    Supported: Exponents like <code className="text-slate-600">x^3</code>, coefficients, fractions like <code className="text-slate-600">1/2x^2</code>, and custom variables like <code className="text-slate-600">t</code>
-                  </span>
+                  <input
+                    type="text"
+                    value={dividendInput}
+                    onFocus={() => setActiveInput('dividend')}
+                    onChange={(e) => setDividendInput(e.target.value)}
+                    placeholder={t.dividendPlaceholder}
+                    className="w-full px-3.5 py-2.5 bg-slate-50/60 border border-slate-200 rounded-xl text-base font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition"
+                  />
                 </div>
 
                 {/* Divisor Input */}
                 <div>
-                  <label className="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5">
-                    {t.divisorLabel}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={divisorInput}
-                      onFocus={() => setActiveInput('divisor')}
-                      onChange={(e) => setDivisorInput(e.target.value)}
-                      placeholder={t.divisorPlaceholder}
-                      className="w-full px-4 py-3 bg-slate-50/70 border border-slate-200 rounded-xl text-base sm:text-lg font-mono font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition shadow-2xs"
-                    />
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-bold text-slate-700">
+                      {t.divisorLabel}
+                    </label>
                   </div>
-                  <span className="text-[11px] text-slate-400 mt-1 block">
-                    Linear: <code className="text-slate-600">x - 2</code>, Quadratic: <code className="text-slate-600">x^2 + 1</code>, or higher degree
-                  </span>
+                  <input
+                    type="text"
+                    value={divisorInput}
+                    onFocus={() => setActiveInput('divisor')}
+                    onChange={(e) => setDivisorInput(e.target.value)}
+                    placeholder={t.divisorPlaceholder}
+                    className="w-full px-3.5 py-2.5 bg-slate-50/60 border border-slate-200 rounded-xl text-base font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition"
+                  />
                 </div>
               </div>
 
-              {/* Toggles & Keypad Trigger */}
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                <label className="flex items-center gap-2 cursor-pointer select-none text-xs sm:text-sm font-medium text-slate-600">
-                  <input
-                    type="checkbox"
-                    checked={showPadding}
-                    onChange={(e) => setShowPadding(e.target.checked)}
-                    className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"
-                  />
-                  <span>{t.showPaddingToggle}</span>
-                </label>
+              {/* Presets & Toggles Bar */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs text-slate-500">
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={showPadding}
+                      onChange={(e) => setShowPadding(e.target.checked)}
+                      className="w-3.5 h-3.5 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"
+                    />
+                    <span>{t.showPaddingToggle}</span>
+                  </label>
+
+                  {/* Quick Examples Dropdown */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowPresetsDropdown(!showPresetsDropdown)}
+                      className="text-indigo-600 font-semibold hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>{t.randomPresetBtn}</span>
+                      <ChevronDown className="w-3 h-3" />
+                    </button>
+
+                    {showPresetsDropdown && (
+                      <div className="absolute left-0 top-6 w-60 bg-white border border-slate-200 rounded-xl shadow-lg p-1.5 z-30">
+                        {divisionPresets.map((p, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => {
+                              setDividendInput(p.dividend);
+                              setDivisorInput(p.divisor);
+                              setShowPresetsDropdown(false);
+                              handleCalculateDivision(p.dividend, p.divisor);
+                            }}
+                            className="w-full text-left px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 rounded-lg"
+                          >
+                            {p.title}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
 
                 <button
                   type="button"
                   onClick={() => setShowKeypad(!showKeypad)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border flex items-center gap-1.5 transition ${
-                    showKeypad
-                      ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
-                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                  }`}
+                  className="text-slate-600 hover:text-slate-900 font-medium flex items-center gap-1"
                 >
-                  <Keyboard className="w-4 h-4" />
+                  <Keyboard className="w-3.5 h-3.5" />
                   <span>{t.mathKeypadBtn}</span>
                 </button>
               </div>
             </div>
           ) : (
-            /* Completing Square Input */
+            /* Completing the square input */
             <div className="space-y-4">
               <div>
-                <label className="block text-xs sm:text-sm font-bold text-slate-700 mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
                   {t.quadraticLabel}
                 </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={quadraticInput}
-                    onFocus={() => setActiveInput('quadratic')}
-                    onChange={(e) => setQuadraticInput(e.target.value)}
-                    placeholder={t.quadraticPlaceholder}
-                    className="w-full px-4 py-3 bg-slate-50/70 border border-slate-200 rounded-xl text-base sm:text-lg font-mono font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition shadow-2xs"
-                  />
-                </div>
-                <span className="text-[11px] text-slate-400 mt-1 block">
-                  Example formats: <code className="text-slate-600">2x^2 + 8x - 10</code>, <code className="text-slate-600">x^2 - 6x + 9</code>, <code className="text-slate-600">-3x^2 + 12x + 1</code>
-                </span>
+                <input
+                  type="text"
+                  value={quadraticInput}
+                  onFocus={() => setActiveInput('quadratic')}
+                  onChange={(e) => setQuadraticInput(e.target.value)}
+                  placeholder={t.quadraticPlaceholder}
+                  className="w-full px-3.5 py-2.5 bg-slate-50/60 border border-slate-200 rounded-xl text-base font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 transition"
+                />
               </div>
 
-              <div className="flex justify-end">
+              {/* Presets Bar */}
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowPresetsDropdown(!showPresetsDropdown)}
+                    className="text-emerald-700 font-semibold hover:text-emerald-900 flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>{t.randomPresetBtn}</span>
+                    <ChevronDown className="w-3 h-3" />
+                  </button>
+
+                  {showPresetsDropdown && (
+                    <div className="absolute left-0 top-6 w-60 bg-white border border-slate-200 rounded-xl shadow-lg p-1.5 z-30">
+                      {quadraticPresets.map((p, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => {
+                            setQuadraticInput(p.formula);
+                            setShowPresetsDropdown(false);
+                            handleCalculateCompletingSquare(p.formula);
+                          }}
+                          className="w-full text-left px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 rounded-lg"
+                        >
+                          {p.title}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <button
                   type="button"
                   onClick={() => setShowKeypad(!showKeypad)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border flex items-center gap-1.5 transition ${
-                    showKeypad
-                      ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                  }`}
+                  className="text-slate-600 hover:text-slate-900 font-medium flex items-center gap-1"
                 >
-                  <Keyboard className="w-4 h-4" />
+                  <Keyboard className="w-3.5 h-3.5" />
                   <span>{t.mathKeypadBtn}</span>
                 </button>
               </div>
             </div>
           )}
 
-          {/* Virtual Math Keypad Drawer */}
+          {/* Virtual Math Keypad */}
           {showKeypad && (
-            <div className="mt-4 animate-in fade-in duration-200">
+            <div className="mt-4 pt-3 border-t border-slate-100">
               <MathKeypad
                 onInsert={handleKeypadInsert}
                 onBackspace={handleKeypadBackspace}
@@ -557,15 +531,15 @@ export default function App() {
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-5 mt-5 border-t border-slate-100">
+          {/* Action Row */}
+          <div className="flex items-center justify-between gap-3 pt-4 mt-4 border-t border-slate-100">
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() =>
                   mode === 'division' ? handleCalculateDivision() : handleCalculateCompletingSquare()
                 }
-                className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm sm:text-base shadow-sm shadow-indigo-200 transition-all active:scale-98 flex items-center gap-2 cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm shadow-xs transition active:scale-98 cursor-pointer flex items-center gap-2"
               >
                 <Calculator className="w-4 h-4" />
                 <span>{t.calculateBtn}</span>
@@ -581,30 +555,30 @@ export default function App() {
                     setQuadraticInput('');
                   }
                 }}
-                className="px-4 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs sm:text-sm transition flex items-center gap-1.5 cursor-pointer"
+                className="p-2.5 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition"
+                title={t.clearBtn}
               >
                 <RotateCcw className="w-4 h-4" />
-                <span>{t.clearBtn}</span>
               </button>
             </div>
 
             {/* Export Toolbar */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 text-xs">
               <button
                 type="button"
                 onClick={handleCopyMarkdown}
-                className="px-3 py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 flex items-center gap-1.5 transition"
-                title="Copy Solution in Markdown for Homework"
+                className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium flex items-center gap-1 transition"
+                title="Copy Markdown"
               >
                 {copiedType === 'markdown' ? (
                   <>
-                    <Check className="w-4 h-4 text-emerald-600" />
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
                     <span className="text-emerald-700 font-bold">{t.copiedNotice}</span>
                   </>
                 ) : (
                   <>
-                    <Copy className="w-4 h-4 text-slate-500" />
-                    <span>{t.copySolutionBtn}</span>
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Markdown</span>
                   </>
                 )}
               </button>
@@ -612,18 +586,15 @@ export default function App() {
               <button
                 type="button"
                 onClick={handleCopyLatex}
-                className="px-3 py-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700 flex items-center gap-1.5 transition"
-                title="Copy LaTeX Expression"
+                className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 font-medium flex items-center gap-1 transition"
+                title="Copy LaTeX"
               >
                 {copiedType === 'latex' ? (
-                  <>
-                    <Check className="w-4 h-4 text-emerald-600" />
-                    <span className="text-emerald-700 font-bold">LaTeX Copied!</span>
-                  </>
+                  <span className="text-emerald-700 font-bold">LaTeX Copied!</span>
                 ) : (
                   <>
-                    <Code2 className="w-4 h-4 text-slate-500" />
-                    <span>{t.copyLatexBtn}</span>
+                    <Code2 className="w-3.5 h-3.5" />
+                    <span>LaTeX</span>
                   </>
                 )}
               </button>
@@ -631,99 +602,80 @@ export default function App() {
               <button
                 type="button"
                 onClick={handlePrint}
-                className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 transition"
-                title="Print or Save as PDF Worksheet"
+                className="p-2 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition"
+                title={t.printBtn}
               >
-                <Printer className="w-4 h-4" />
+                <Printer className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
 
-          {/* Syntax Error Notice */}
+          {/* Syntax Error */}
           {calcError && (
-            <div className="mt-4 p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs sm:text-sm flex items-start gap-2.5">
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+            <div className="mt-3 p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
               <span>{calcError}</span>
             </div>
           )}
         </div>
 
-        {/* RESULTS SECTION FOR POLYNOMIAL DIVISION */}
+        {/* RESULTS: POLYNOMIAL DIVISION */}
         {mode === 'division' && divisionResult && !calcError && (
-          <div className="space-y-6">
-            {/* High Level Result Card */}
-            <div className="bg-gradient-to-r from-indigo-50 via-sky-50 to-emerald-50 border border-indigo-200/80 rounded-3xl p-5 sm:p-7 shadow-xs">
-              <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-indigo-200/60">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg sm:text-xl font-bold text-slate-900">
-                    {t.resultHeader}
-                  </h2>
-                  {divisionResult.isExact ? (
-                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                      {t.exactDivisionBadge}
-                    </span>
-                  ) : (
-                    <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900">
-                      {t.nonZeroRemainderBadge}
-                    </span>
-                  )}
-                </div>
-
-                {divisionResult.slantAsymptote && (
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-900">
-                    Oblique Asymptote: {divisionResult.slantAsymptote}
-                  </span>
-                )}
+          <div className="space-y-5">
+            {/* Direct Answer Summary Box */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-slate-900">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-200/80">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  {t.resultHeader}
+                </span>
+                <span
+                  className={`text-xs font-bold px-2 py-0.5 rounded-md ${
+                    divisionResult.isExact
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : 'bg-amber-100 text-amber-900'
+                  }`}
+                >
+                  {divisionResult.isExact ? t.exactDivisionBadge : t.nonZeroRemainderBadge}
+                </span>
               </div>
 
-              {/* Big Equation Summary */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div className="bg-white/90 p-4 rounded-2xl border border-slate-200">
-                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+              {/* Big Clean Output */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                <div className="bg-white p-3.5 rounded-xl border border-slate-200">
+                  <div className="text-[11px] font-semibold text-slate-500 uppercase">
                     {t.quotientLabel}
                   </div>
-                  <div className="font-mono text-xl sm:text-2xl font-extrabold text-indigo-700">
+                  <div className="text-xl sm:text-2xl font-mono font-bold text-slate-900 mt-0.5">
                     {divisionResult.quotient.toString()}
                   </div>
                 </div>
 
-                <div className="bg-white/90 p-4 rounded-2xl border border-slate-200">
-                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                <div className="bg-white p-3.5 rounded-xl border border-slate-200">
+                  <div className="text-[11px] font-semibold text-slate-500 uppercase">
                     {t.remainderLabel}
                   </div>
-                  <div className="font-mono text-xl sm:text-2xl font-extrabold text-slate-800">
+                  <div className="text-xl sm:text-2xl font-mono font-bold text-slate-900 mt-0.5">
                     {divisionResult.remainder.toString()}
                   </div>
                 </div>
               </div>
 
-              {/* Fractional Output Formula */}
-              <div className="mt-4 bg-white/90 p-4 rounded-2xl border border-slate-200">
-                <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                  {t.summaryFormLabel}
-                </div>
-                <div className="font-mono text-sm sm:text-base font-bold text-slate-900 overflow-x-auto py-1">
-                  ({divisionResult.dividend.toString()}) ÷ ({divisionResult.divisor.toString()}) ={' '}
-                  <span className="text-indigo-700">{divisionResult.quotient.toString()}</span>
-                  {!divisionResult.remainder.isZero() && (
-                    <span className="text-slate-700">
-                      {' '}
-                      + [({divisionResult.remainder.toString()}) / (
-                      {divisionResult.divisor.toString()})]
-                    </span>
-                  )}
-                </div>
+              <div className="text-xs sm:text-sm font-mono text-slate-700 bg-white p-2.5 rounded-xl border border-slate-200 overflow-x-auto">
+                <span className="text-slate-400 font-sans">{t.summaryFormLabel}: </span>
+                ({divisionResult.dividend.toString()}) = ({divisionResult.divisor.toString()}) · (
+                <span className="font-bold text-slate-900">{divisionResult.quotient.toString()}</span>
+                ) + ({divisionResult.remainder.toString()})
               </div>
             </div>
 
             {/* TAB SELECTOR */}
-            <div className="flex border-b border-slate-200 gap-1 overflow-x-auto text-xs sm:text-sm font-bold">
+            <div className="flex border-b border-slate-200 gap-1 overflow-x-auto text-xs sm:text-sm font-semibold">
               <button
                 type="button"
                 onClick={() => setActiveDivisionTab('busstop')}
-                className={`px-4 py-3 border-b-2 transition-all whitespace-nowrap ${
+                className={`px-3.5 py-2.5 border-b-2 transition whitespace-nowrap ${
                   activeDivisionTab === 'busstop'
-                    ? 'border-indigo-600 text-indigo-700 bg-indigo-50/30'
+                    ? 'border-slate-900 text-slate-900 font-bold'
                     : 'border-transparent text-slate-500 hover:text-slate-800'
                 }`}
               >
@@ -733,9 +685,9 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setActiveDivisionTab('steps')}
-                className={`px-4 py-3 border-b-2 transition-all whitespace-nowrap ${
+                className={`px-3.5 py-2.5 border-b-2 transition whitespace-nowrap ${
                   activeDivisionTab === 'steps'
-                    ? 'border-indigo-600 text-indigo-700 bg-indigo-50/30'
+                    ? 'border-slate-900 text-slate-900 font-bold'
                     : 'border-transparent text-slate-500 hover:text-slate-800'
                 }`}
               >
@@ -745,24 +697,21 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setActiveDivisionTab('synthetic')}
-                className={`px-4 py-3 border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                className={`px-3.5 py-2.5 border-b-2 transition whitespace-nowrap ${
                   activeDivisionTab === 'synthetic'
-                    ? 'border-emerald-600 text-emerald-700 bg-emerald-50/30'
+                    ? 'border-slate-900 text-slate-900 font-bold'
                     : 'border-transparent text-slate-500 hover:text-slate-800'
                 }`}
               >
-                <span>{t.syntheticTab}</span>
-                {syntheticResult?.isApplicable && (
-                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                )}
+                {t.syntheticTab}
               </button>
 
               <button
                 type="button"
                 onClick={() => setActiveDivisionTab('verification')}
-                className={`px-4 py-3 border-b-2 transition-all whitespace-nowrap ${
+                className={`px-3.5 py-2.5 border-b-2 transition whitespace-nowrap ${
                   activeDivisionTab === 'verification'
-                    ? 'border-indigo-600 text-indigo-700 bg-indigo-50/30'
+                    ? 'border-slate-900 text-slate-900 font-bold'
                     : 'border-transparent text-slate-500 hover:text-slate-800'
                 }`}
               >
@@ -773,9 +722,9 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setActiveDivisionTab('asymptote')}
-                  className={`px-4 py-3 border-b-2 transition-all whitespace-nowrap ${
+                  className={`px-3.5 py-2.5 border-b-2 transition whitespace-nowrap ${
                     activeDivisionTab === 'asymptote'
-                      ? 'border-indigo-600 text-indigo-700 bg-indigo-50/30'
+                      ? 'border-slate-900 text-slate-900 font-bold'
                       : 'border-transparent text-slate-500 hover:text-slate-800'
                   }`}
                 >
@@ -783,57 +732,6 @@ export default function App() {
                 </button>
               )}
             </div>
-
-            {/* STEP STEPPER CONTROLLER */}
-            {activeDivisionTab === 'busstop' && divisionResult.steps.length > 0 && (
-              <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 border border-slate-200 p-3.5 rounded-2xl">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs sm:text-sm font-bold text-slate-700">
-                    {showAllSteps
-                      ? `Viewing all ${divisionResult.steps.length} steps`
-                      : `Step ${currentStepIndex + 1} of ${divisionResult.steps.length}`}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    disabled={currentStepIndex === 0 || showAllSteps}
-                    onClick={() => setCurrentStepIndex((prev) => Math.max(0, prev - 1))}
-                    className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-40 transition"
-                  >
-                    {t.prevStepBtn}
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={
-                      currentStepIndex >= divisionResult.steps.length - 1 || showAllSteps
-                    }
-                    onClick={() =>
-                      setCurrentStepIndex((prev) =>
-                        Math.min(divisionResult.steps.length - 1, prev + 1)
-                      )
-                    }
-                    className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-40 transition"
-                  >
-                    {t.nextStepBtn}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowAllSteps(!showAllSteps)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-                      showAllSteps
-                        ? 'bg-indigo-600 text-white shadow-2xs'
-                        : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
-                    }`}
-                  >
-                    {showAllSteps ? 'Switch to Step-by-Step' : t.showAllStepsBtn}
-                  </button>
-                </div>
-              </div>
-            )}
 
             {/* TAB CONTENTS */}
             {activeDivisionTab === 'busstop' && (
@@ -869,42 +767,43 @@ export default function App() {
           </div>
         )}
 
-        {/* RESULTS SECTION FOR COMPLETING THE SQUARE */}
+        {/* RESULTS: COMPLETING THE SQUARE */}
         {mode === 'completing_square' && completingSquareResult && !calcError && (
           <CompletingTheSquareView result={completingSquareResult} currentLang={lang} />
         )}
 
-        {/* CURATED PRACTICE PROBLEMS & QUIZ MODE */}
-        <PracticeProblems
-          onLoadProblem={handleLoadPracticeProblem}
-          currentLang={lang}
-        />
+        {/* PRACTICE PROBLEMS */}
+        <div id="practice" className="pt-6">
+          <PracticeProblems
+            onLoadProblem={handleLoadPracticeProblem}
+            currentLang={lang}
+          />
+        </div>
 
-        {/* EDUCATIONAL GUIDE & FAQ (SEO OPTIMIZED) */}
-        <EducationalGuide currentLang={lang} />
+        {/* EDUCATIONAL STUDY GUIDE & FAQS */}
+        <div id="study-guide" className="pt-6">
+          <EducationalGuide currentLang={lang} />
+        </div>
       </main>
 
       {/* FOOTER */}
-      <footer className="mt-20 border-t border-slate-200 bg-slate-50/80 py-10 px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-slate-500">
+      <footer className="mt-16 border-t border-slate-200 bg-slate-50/60 py-8 px-4 sm:px-6">
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <div>
-            <div className="font-bold text-slate-700 text-sm mb-1">
-              PolyMath Step-by-Step Solver
-            </div>
-            <p className="leading-relaxed max-w-md">
-              {t.footerNote} Accurate, free math tools for polynomial division, synthetic division,
-              completing the square, and rational functions.
-            </p>
+            <span className="font-bold text-slate-700">PolyMath Pro</span>
+            <span className="ml-2">© 2026. {t.footerNote}</span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 text-xs font-medium">
-            <span className="text-slate-400">© 2026 PolyMath Solver</span>
-            <span className="text-slate-300">•</span>
-            <a href="#root" className="hover:text-indigo-600 transition">Back to Top</a>
-            <span className="text-slate-300">•</span>
-            <a href="#faqs" className="hover:text-indigo-600 transition">Math FAQs</a>
-            <span className="text-slate-300">•</span>
-            <a href="/sitemap.xml" className="hover:text-indigo-600 transition">Sitemap</a>
+          <div className="flex items-center gap-4">
+            <a href="#study-guide" className="hover:text-slate-900 transition">
+              {t.navGuide}
+            </a>
+            <a href="#faqs" className="hover:text-slate-900 transition">
+              {t.navFaq}
+            </a>
+            <a href="/sitemap.xml" className="hover:text-slate-900 transition">
+              Sitemap
+            </a>
           </div>
         </div>
       </footer>

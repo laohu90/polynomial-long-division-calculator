@@ -67,20 +67,19 @@ export const CompletingTheSquareView: React.FC<CompletingTheSquareViewProps> = (
   return (
     <div className="space-y-6">
       {/* SUMMARY BANNER */}
-      <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-indigo-50 border border-emerald-200/80 rounded-3xl p-5 sm:p-7 shadow-xs">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-4 pb-4 border-b border-emerald-200/60">
+      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 text-slate-900 shadow-xs">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-4 pb-3 border-b border-slate-200">
           <div>
-            <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider bg-emerald-100/80 px-2.5 py-1 rounded-full inline-flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
               {t.navCompleteSquare}
             </span>
-            <h3 className="text-lg sm:text-xl font-bold text-slate-800 mt-2">
+            <h3 className="text-lg font-bold text-slate-900 mt-1">
               {currentLang === 'zh'
                 ? '一般式转顶点式 (Standard to Vertex Form)'
                 : 'Standard Form to Vertex Form Conversion'}
             </h3>
           </div>
-          <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-600">
+          <div className="text-xs font-semibold text-slate-600 bg-white px-2.5 py-1 rounded-lg border border-slate-200">
             <span>
               {direction === 'up'
                 ? currentLang === 'zh'

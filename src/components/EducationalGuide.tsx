@@ -68,7 +68,7 @@ export const EducationalGuide: React.FC<EducationalGuideProps> = ({ currentLang 
       </div>
 
       {/* COMPARISON TABLE: Long Division vs Synthetic Division */}
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xs">
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-7 shadow-xs">
         <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-2 flex items-center gap-2">
           <span>{t.comparisonTable.headers[1]} vs. {t.comparisonTable.headers[2]}</span>
         </h3>
@@ -101,7 +101,7 @@ export const EducationalGuide: React.FC<EducationalGuideProps> = ({ currentLang 
       </div>
 
       {/* TOP 4 STUDENT MISTAKES CALLOUT */}
-      <div className="bg-rose-50/50 border border-rose-200 rounded-3xl p-6 sm:p-8">
+      <div className="bg-rose-50/50 border border-rose-200 rounded-2xl p-5 sm:p-7">
         <h3 className="text-lg font-bold text-rose-950 mb-3 flex items-center gap-2">
           <AlertOctagon className="w-5 h-5 text-rose-600" />
           <span>{t.studentMistakes.title}</span>
@@ -117,7 +117,7 @@ export const EducationalGuide: React.FC<EducationalGuideProps> = ({ currentLang 
       </div>
 
       {/* FAQ ACCORDION SECTION */}
-      <div id="faqs" className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xs">
+      <div id="faqs" className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-7 shadow-xs">
         <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
           <HelpCircle className="w-6 h-6 text-indigo-600" />
           <span>{t.faqTitle}</span>

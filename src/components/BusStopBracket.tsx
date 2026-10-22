@@ -29,7 +29,7 @@ export const BusStopBracket: React.FC<BusStopBracketProps> = ({
   const visibleSteps = showAllSteps ? steps : steps.slice(0, currentStepIndex + 1);
 
   return (
-    <div className="bg-white border border-slate-200 rounded-3xl p-4 sm:p-7 shadow-xs overflow-x-auto">
+    <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-xs overflow-x-auto">
       <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-5 border-b border-slate-100">
         <div>
           <h3 className="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
