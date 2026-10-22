@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { CompletingTheSquareResult } from '../math/completingTheSquare';
+import { Fraction } from '../math/fraction';
 import { Sparkles, ArrowRight, CheckCircle2, Box, TrendingUp, Layers } from 'lucide-react';
 
 interface CompletingTheSquareViewProps {
@@ -27,7 +28,7 @@ export const CompletingTheSquareView: React.FC<CompletingTheSquareViewProps> = (
 
   // Values for geometric square model
   const bOverAVal = b.div(a);
-  const halfBVal = bOverAVal.div({ num: 2n, den: 1n } as any);
+  const halfBVal = bOverAVal.div(new Fraction(2n, 1n));
   const magicTermVal = halfBVal.mul(halfBVal);
 
   // Values for SVG Parabola Graph

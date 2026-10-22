@@ -225,86 +225,66 @@ export class Polynomial {
 
   /**
    * Parse arbitrary polynomial strings like:
-   * "3x^3 - 2x^2 + 4x - 5"
+   * "2x^3 - x^2 - 7x + 2"
    * "x^4 - 16"
    * "-x^2 + 3/4x - 1"
    * "(2x - 5)"
    */
   static parse(input: string, explicitVar?: string): Polynomial {
-    let clean = input.trim();
-    if (!clean) return Polynomial.zero(explicitVar || 'x');
+    let raw = input.trim();
+    if (!raw) return Polynomial.zero(explicitVar || 'x');
 
-    const detectedVar = explicitVar || Polynomial.detectVariable(clean);
+    const detectedVar = explicitVar || Polynomial.detectVariable(raw);
 
     // Strip outer parentheses
-    if (clean.startsWith('(') && clean.endsWith(')')) {
-      clean = clean.slice(1, -1).trim();
+    if (raw.startsWith('(') && raw.endsWith(')')) {
+      raw = raw.slice(1, -1).trim();
     }
 
     // Replace '**' with '^'
-    clean = clean.replace(/\*\*/g, '^');
-    // Normalize spaces
-    clean = clean.replace(/\s+/g, ' ');
+    raw = raw.replace(/\*\*/g, '^');
 
     // Normalize user's variable to lowercase 'x' for parsing
     const varRegex = new RegExp(detectedVar, 'gi');
-    clean = clean.replace(varRegex, 'x');
+    raw = raw.replace(varRegex, 'x');
 
-    // Tokenize terms: insert spaces around '+' and '-' unless part of fraction or exponent
-    let formatted = '';
-    for (let i = 0; i < clean.length; i++) {
-      const ch = clean[i];
+    // Remove all whitespace
+    const s = raw.replace(/\s+/g, '');
+
+    // Replace '-' with '+-' so every term is separated by '+'
+    // Do not replace if '-' is at start or preceded by operator '^', '/', '(', '+'
+    let separated = '';
+    for (let i = 0; i < s.length; i++) {
+      const c = s[i];
       if (
-        ch === '-' &&
+        c === '-' &&
         i > 0 &&
-        clean[i - 1] !== ' ' &&
-        clean[i - 1] !== '+' &&
-        clean[i - 1] !== '-' &&
-        clean[i - 1] !== '^' &&
-        clean[i - 1] !== '/' &&
-        clean[i - 1] !== '('
+        s[i - 1] !== '^' &&
+        s[i - 1] !== '/' &&
+        s[i - 1] !== '(' &&
+        s[i - 1] !== '+'
       ) {
-        formatted += ' -';
-      } else if (
-        ch === '+' &&
-        i > 0 &&
-        clean[i - 1] !== ' ' &&
-        clean[i - 1] !== '^' &&
-        clean[i - 1] !== '/' &&
-        clean[i - 1] !== '('
-      ) {
-        formatted += ' +';
+        separated += '+-';
       } else {
-        formatted += ch;
+        separated += c;
       }
     }
 
-    const tokens = formatted.split(/\s+/).filter(Boolean);
+    const tokens = separated.split('+').filter(Boolean);
     const terms: Term[] = [];
 
-    for (const rawToken of tokens) {
-      let tok = rawToken.trim();
-      if (!tok || tok === '+') continue;
-
-      let sign = 1n;
-      if (tok.startsWith('+')) {
-        tok = tok.slice(1);
-      } else if (tok.startsWith('-')) {
-        sign = -1n;
-        tok = tok.slice(1);
-      }
-
+    for (const tok of tokens) {
       if (!tok) continue;
 
       if (!tok.includes('x')) {
-        // Pure constant (could be a fraction like 3/4 or integer 5)
+        // Pure constant (e.g. "2", "-16", "3/4")
         const frac = Fraction.fromString(tok);
         terms.push({
           power: 0,
-          coef: sign === -1n ? frac.negate() : frac,
+          coef: frac,
         });
       } else {
-        // Contains 'x'
+        // Contains 'x' (e.g. "2x^3", "-x^2", "-7x", "x", "-x", "1/2x^2")
         const parts = tok.split('x');
         let coefStr = parts[0];
         let powerStr = parts[1] || '';
@@ -322,8 +302,10 @@ export class Polynomial {
           frac = Fraction.one();
         } else if (coefStr === '-') {
           frac = Fraction.one().negate();
+        } else if (coefStr === '+') {
+          frac = Fraction.one();
         } else {
-          // If coefficient has parentheses like (1/2)x
+          // If coefficient has parentheses like (1/2)x or (-3/4)x
           if (coefStr.startsWith('(') && coefStr.endsWith(')')) {
             coefStr = coefStr.slice(1, -1);
           }
@@ -332,7 +314,7 @@ export class Polynomial {
 
         terms.push({
           power,
-          coef: sign === -1n ? frac.negate() : frac,
+          coef: frac,
         });
       }
     }

@@ -157,9 +157,9 @@ export function performPolynomialLongDivision(
       }
     }
 
-    const qTermStr = Polynomial.formatTerm(qTerm, quotientTerms.length === 1);
-    const leadDivStr = Polynomial.formatTerm(leadDiv, true);
-    const leadDvrStr = Polynomial.formatTerm(leadDvr, true);
+    const qTermStr = Polynomial.formatTerm(qTerm, quotientTerms.length === 1, dividend.variable);
+    const leadDivStr = Polynomial.formatTerm(leadDiv, true, dividend.variable);
+    const leadDvrStr = Polynomial.formatTerm(leadDvr, true, divisor.variable);
 
     const stepObj: DivisionStep = {
       stepNumber: stepCount,
@@ -177,7 +177,7 @@ export function performPolynomialLongDivision(
         multiply: `Multiply (${qTermStr}) by divisor (${divisor.toString()}): result is (${product.toString()})`,
         subtract: `Subtract (${product.toString()}) from current dividend. Changing signs gives: (${subtractionNegated.toString()}), yielding remainder (${newRem.toString()})`,
         bringDown: broughtDownTerm
-          ? `Bring down the next term (${Polynomial.formatTerm(broughtDownTerm, false)}) to form the next line (${newRem.toString()})`
+          ? `Bring down the next term (${Polynomial.formatTerm(broughtDownTerm, false, dividend.variable)}) to form the next line (${newRem.toString()})`
           : `No further terms to bring down.`,
       },
     };
@@ -186,7 +186,7 @@ export function performPolynomialLongDivision(
     currentRemainder = newRem;
   }
 
-  const quotient = new Polynomial(quotientTerms);
+  const quotient = new Polynomial(quotientTerms, dividend.variable);
   const finalRemainder = currentRemainder;
   const isExact = finalRemainder.isZero();
 

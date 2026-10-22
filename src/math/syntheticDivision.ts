@@ -106,7 +106,7 @@ export function performSyntheticDivision(
     );
   }
 
-  const quotient = new Polynomial(rawQuotientTerms);
+  const quotient = new Polynomial(rawQuotientTerms, dividend.variable);
   const isExact = remainder.isZero();
 
   return {
