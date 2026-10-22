@@ -35,30 +35,30 @@ export class Fraction {
   }
 
   static fromString(str: string): Fraction {
-    const trimmed = str.trim();
-    if (!trimmed) return new Fraction(0n, 1n);
+    const clean = str.replace(/\s+/g, '');
+    if (!clean) return new Fraction(0n, 1n);
 
     // check if it's a fraction "p/q"
-    if (trimmed.includes('/')) {
-      const parts = trimmed.split('/');
+    if (clean.includes('/')) {
+      const parts = clean.split('/');
       if (parts.length === 2) {
-        const n = BigInt(parts[0].trim());
-        const d = BigInt(parts[1].trim());
+        const n = BigInt(parts[0]);
+        const d = BigInt(parts[1]);
         return new Fraction(n, d);
       }
     }
 
     // check if decimal
-    if (trimmed.includes('.')) {
-      const sign = trimmed.startsWith('-') ? -1n : 1n;
-      const clean = trimmed.replace('-', '');
-      const [intPart, decPart] = clean.split('.');
+    if (clean.includes('.')) {
+      const sign = clean.startsWith('-') ? -1n : 1n;
+      const unsignedStr = clean.replace('-', '');
+      const [intPart, decPart] = unsignedStr.split('.');
       const den = 10n ** BigInt(decPart.length);
       const num = BigInt(intPart) * den + BigInt(decPart);
       return new Fraction(sign * num, den);
     }
 
-    return new Fraction(BigInt(trimmed), 1n);
+    return new Fraction(BigInt(clean), 1n);
   }
 
   static zero(): Fraction {
