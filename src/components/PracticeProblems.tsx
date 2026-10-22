@@ -1,93 +1,25 @@
 import React, { useState } from 'react';
-import { Target, CheckCircle2, ChevronRight, Eye, Play } from 'lucide-react';
-import { Language } from '../i18n/translations';
-
-interface PracticeProblem {
-  id: string;
-  category: 'Long Division' | 'Synthetic Division' | 'Completing the Square';
-  title: string;
-  dividend?: string;
-  divisor?: string;
-  quadratic?: string;
-  targetMode: 'division' | 'completing_square';
-  difficulty: 'Easy' | 'Medium' | 'Hard';
-  hint: string;
-  answerSummary: string;
-}
+import { Target, Eye, Play } from 'lucide-react';
+import { Language, translations, PracticeProblemData } from '../i18n/translations';
 
 interface PracticeProblemsProps {
-  onLoadProblem: (problem: PracticeProblem) => void;
+  onLoadProblem: (problem: PracticeProblemData) => void;
   currentLang: Language;
 }
 
-export const PracticeProblems: React.FC<PracticeProblemsProps> = ({ onLoadProblem, currentLang }) => {
+export const PracticeProblems: React.FC<PracticeProblemsProps> = ({
+  onLoadProblem,
+  currentLang,
+}) => {
+  const t = translations[currentLang];
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [revealedHints, setRevealedHints] = useState<Record<string, boolean>>({});
 
-  const problems: PracticeProblem[] = [
-    {
-      id: 'p1',
-      category: 'Long Division',
-      title: 'Missing Degree Trap: (x⁴ - 1) ÷ (x - 1)',
-      dividend: 'x^4 - 1',
-      divisor: 'x - 1',
-      targetMode: 'division',
-      difficulty: 'Medium',
-      hint: 'Remember to insert placeholder zeros for x³, x², and x: x⁴ + 0x³ + 0x² + 0x - 1.',
-      answerSummary: 'Quotient: x³ + x² + x + 1, Remainder: 0 (Exact Division)',
-    },
-    {
-      id: 'p2',
-      category: 'Long Division',
-      title: 'Precalculus Slant Asymptote: (2x³ + 3x² - x + 4) ÷ (x² - 1)',
-      dividend: '2x^3 + 3x^2 - x + 4',
-      divisor: 'x^2 - 1',
-      targetMode: 'division',
-      difficulty: 'Hard',
-      hint: 'Since degree of numerator is 3 and denominator is 2, the quotient gives the slant asymptote y = 2x + 3.',
-      answerSummary: 'Quotient: 2x + 3, Remainder: x + 7. Slant Asymptote: y = 2x + 3',
-    },
-    {
-      id: 'p3',
-      category: 'Synthetic Division',
-      title: 'Non-Monic Linear Divisor: (4x³ - 6x² + 8x - 5) ÷ (2x - 1)',
-      dividend: '4x^3 - 6x^2 + 8x - 5',
-      divisor: '2x - 1',
-      targetMode: 'division',
-      difficulty: 'Medium',
-      hint: 'Divisor root is c = 1/2. After synthetic division, divide the quotient coefficients by 2!',
-      answerSummary: 'Quotient: 2x² - 2x + 3, Remainder: -2',
-    },
-    {
-      id: 'p4',
-      category: 'Completing the Square',
-      title: 'Vertex Form of a Monic Quadratic: x² - 6x + 5',
-      quadratic: 'x^2 - 6x + 5',
-      targetMode: 'completing_square',
-      difficulty: 'Easy',
-      hint: 'Half of -6 is -3. Square it to get (-3)² = 9. Add and subtract 9.',
-      answerSummary: 'Vertex Form: (x - 3)² - 4. Vertex: (3, -4), Roots: x = 1, x = 5',
-    },
-    {
-      id: 'p5',
-      category: 'Completing the Square',
-      title: 'Factor Out Coefficient a ≠ 1: 3x² + 12x + 7',
-      quadratic: '3x^2 + 12x + 7',
-      targetMode: 'completing_square',
-      difficulty: 'Hard',
-      hint: 'Factor out 3 from first two terms: 3(x² + 4x) + 7. Magic number is (4/2)² = 4.',
-      answerSummary: 'Vertex Form: 3(x + 2)² - 5. Vertex: (-2, -5), Min Value: -5',
-    },
-    {
-      id: 'p6',
-      category: 'Completing the Square',
-      title: 'Negative Leading Coefficient (Parabola Peak): -x² + 4x + 12',
-      quadratic: '-x^2 + 4x + 12',
-      targetMode: 'completing_square',
-      difficulty: 'Medium',
-      hint: 'Factor out -1: -(x² - 4x) + 12. Notice the sign of the linear term flips to -4x.',
-      answerSummary: 'Vertex Form: -(x - 2)² + 16. Vertex (Max Peak): (2, 16)',
-    },
+  const problems = t.practiceProblems;
+
+  const categories = [
+    'All',
+    ...Array.from(new Set(problems.map((p) => p.category))),
   ];
 
   const filtered =
@@ -103,19 +35,29 @@ export const PracticeProblems: React.FC<PracticeProblemsProps> = ({ onLoadProble
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full inline-flex items-center gap-1.5">
             <Target className="w-3.5 h-3.5 text-indigo-600" />
-            Curated Practice Problems
+            {currentLang === 'zh'
+              ? '精选典型题库'
+              : currentLang === 'es'
+              ? 'Ejercicios Prácticos Seleccionados'
+              : currentLang === 'fr'
+              ? 'Exercices Types Sélectionnés'
+              : currentLang === 'pt'
+              ? 'Exercícios Práticos Selecionados'
+              : 'Curated Practice Problems'}
           </span>
           <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-2">
-            Exam & Homework Challenge Problems
+            {t.presetsTitle}
           </h3>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Test yourself before viewing the full step-by-step resolution.
+            {currentLang === 'zh'
+              ? '先在草稿纸上动手计算，再点击查看提示或一键载入解题器验证！'
+              : 'Test your skills on paper first, then check hints or load directly into the step-by-step solver.'}
           </p>
         </div>
 
         {/* Category Pills */}
         <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1 rounded-xl text-xs font-semibold">
-          {['All', 'Long Division', 'Synthetic Division', 'Completing the Square'].map((cat) => (
+          {categories.map((cat) => (
             <button
               key={cat}
               type="button"
@@ -126,7 +68,7 @@ export const PracticeProblems: React.FC<PracticeProblemsProps> = ({ onLoadProble
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              {cat}
+              {cat === 'All' ? (currentLang === 'zh' ? '全部' : 'All') : cat}
             </button>
           ))}
         </div>
@@ -178,10 +120,10 @@ export const PracticeProblems: React.FC<PracticeProblemsProps> = ({ onLoadProble
                 {isHintOpen && (
                   <div className="mt-2 p-3 bg-amber-50/70 border border-amber-200 rounded-xl text-xs space-y-1.5 text-amber-900">
                     <div>
-                      <b>Key Strategy:</b> {prob.hint}
+                      <b>{currentLang === 'zh' ? '解题锦囊：' : 'Key Strategy: '}</b> {prob.hint}
                     </div>
                     <div className="pt-1 border-t border-amber-200 font-mono font-semibold text-slate-800">
-                      Answer: {prob.answerSummary}
+                      {currentLang === 'zh' ? '参考答案：' : 'Answer: '} {prob.answerSummary}
                     </div>
                   </div>
                 )}
@@ -195,16 +137,34 @@ export const PracticeProblems: React.FC<PracticeProblemsProps> = ({ onLoadProble
                   className="text-xs font-semibold text-slate-600 hover:text-indigo-600 flex items-center gap-1 transition"
                 >
                   <Eye className="w-3.5 h-3.5" />
-                  <span>{isHintOpen ? 'Hide Hint' : 'Reveal Hint & Answer'}</span>
+                  <span>
+                    {isHintOpen
+                      ? currentLang === 'zh'
+                        ? '收起提示'
+                        : 'Hide Hint'
+                      : currentLang === 'zh'
+                      ? '查看提示与速算结果'
+                      : 'Reveal Hint & Answer'}
+                  </span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => onLoadProblem(prob)}
-                  className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-lg transition flex items-center gap-1"
+                  className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-lg transition flex items-center gap-1 cursor-pointer"
                 >
                   <Play className="w-3.5 h-3.5" />
-                  <span>Load into Solver</span>
+                  <span>
+                    {currentLang === 'zh'
+                      ? '载入求解器演算'
+                      : currentLang === 'es'
+                      ? 'Cargar en Calculadora'
+                      : currentLang === 'fr'
+                      ? 'Résoudre pas à pas'
+                      : currentLang === 'pt'
+                      ? 'Carregar no Solucionador'
+                      : 'Load into Solver'}
+                  </span>
                 </button>
               </div>
             </div>

@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { LongDivisionResult } from '../math/longDivision';
 import { Polynomial } from '../math/polynomial';
-import { CheckCircle2, ArrowDown, Sparkles, LayoutGrid } from 'lucide-react';
+import { CheckCircle2, ArrowDown, Sparkles } from 'lucide-react';
+import { Language, translations } from '../i18n/translations';
 
 interface BusStopBracketProps {
   result: LongDivisionResult;
   currentStepIndex: number;
   showAllSteps: boolean;
   showPadding: boolean;
+  currentLang: Language;
 }
 
 export const BusStopBracket: React.FC<BusStopBracketProps> = ({
@@ -15,7 +17,9 @@ export const BusStopBracket: React.FC<BusStopBracketProps> = ({
   currentStepIndex,
   showAllSteps,
   showPadding,
+  currentLang,
 }) => {
+  const t = translations[currentLang];
   const { divisor, quotient, dividend, steps, remainder, allPowers } = result;
 
   // Layout style: 'us' (American bus-stop bracket) vs 'intl' (European / Latin / Potence box)
@@ -29,13 +33,15 @@ export const BusStopBracket: React.FC<BusStopBracketProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-3 pb-4 mb-5 border-b border-slate-100">
         <div>
           <h3 className="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2">
-            <span>Polynomial Long Division Layout</span>
+            <span>{t.busStopViewTab}</span>
             <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
-              {notationStyle === 'us' ? 'US Textbook Standard (Bus-Stop)' : 'European / Latin American Format'}
+              {notationStyle === 'us' ? t.usFormatLabel : t.intlFormatLabel}
             </span>
           </h3>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Terms are strictly aligned by descending powers with sign-flip indicators.
+            {currentLang === 'zh'
+              ? '各项按降幂严格对齐，支持变号相减浮层提示'
+              : 'Terms are strictly aligned by descending powers with sign-flip indicators.'}
           </p>
         </div>
 
@@ -51,7 +57,7 @@ export const BusStopBracket: React.FC<BusStopBracketProps> = ({
                   : 'hover:text-slate-900'
               }`}
             >
-              🇺🇸 US Format
+              {t.usFormatLabel}
             </button>
             <button
               type="button"
@@ -62,16 +68,16 @@ export const BusStopBracket: React.FC<BusStopBracketProps> = ({
                   : 'hover:text-slate-900'
               }`}
             >
-              🇪🇺 European / Latin
+              {t.intlFormatLabel}
             </button>
           </div>
 
           <div className="hidden sm:flex items-center gap-2 text-xs pl-2">
             <span className="inline-flex items-center gap-1 text-slate-500 font-medium">
-              <span className="w-2.5 h-2.5 rounded bg-rose-500"></span> Sign Flip
+              <span className="w-2.5 h-2.5 rounded bg-rose-500"></span> {t.signFlipLabel}
             </span>
             <span className="inline-flex items-center gap-1 text-slate-500 font-medium">
-              <span className="w-2.5 h-2.5 rounded bg-indigo-600"></span> Quotient
+              <span className="w-2.5 h-2.5 rounded bg-indigo-600"></span> {t.quotientLabel}
             </span>
           </div>
         </div>
@@ -184,7 +190,7 @@ export const BusStopBracket: React.FC<BusStopBracketProps> = ({
                           <span className="text-rose-700 font-medium">{text || ' '}</span>
                           {text && (
                             <span className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-5 right-2 bg-slate-900 text-amber-300 text-[10px] font-sans px-1.5 py-0.5 rounded shadow whitespace-nowrap z-20">
-                              Flipped: {flippedText}
+                              {t.flippedPrefix} {flippedText}
                             </span>
                           )}
                         </div>
@@ -230,7 +236,7 @@ export const BusStopBracket: React.FC<BusStopBracketProps> = ({
                           {isBroughtDown && (
                             <span
                               className="inline-block ml-1 text-sky-500 text-xs"
-                              title="Brought down from dividend"
+                              title={t.broughtDownLabel}
                             >
                               <ArrowDown className="w-3 h-3 inline" />
                             </span>
@@ -315,7 +321,9 @@ export const BusStopBracket: React.FC<BusStopBracketProps> = ({
               </div>
 
               <div className="text-xs text-slate-400 font-sans mt-2">
-                Quotient sits below the divisor in European / French / Latin notation.
+                {currentLang === 'zh'
+                  ? '欧式除法排版中，商式位于除式正下方。'
+                  : 'Quotient sits below the divisor in European / French / Latin notation.'}
               </div>
             </div>
           </div>
@@ -328,18 +336,18 @@ export const BusStopBracket: React.FC<BusStopBracketProps> = ({
           {remainder.isZero() ? (
             <span className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-emerald-700 bg-emerald-100/70 px-2.5 py-1 rounded-lg">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              Exact Division! Remainder R({dividend.variable}) = 0
+              {t.exactDivisionBadge} (R = 0)
             </span>
           ) : (
             <span className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-amber-800 bg-amber-100/80 px-2.5 py-1 rounded-lg">
               <Sparkles className="w-4 h-4 text-amber-600" />
-              Non-zero Remainder: R({dividend.variable}) = {remainder.toString()}
+              {t.nonZeroRemainderBadge}: R({dividend.variable}) = {remainder.toString()}
             </span>
           )}
         </div>
 
         <div className="text-xs sm:text-sm font-mono text-slate-700">
-          <span className="text-slate-500 font-sans">Quotient Q({dividend.variable}):</span>{' '}
+          <span className="text-slate-500 font-sans">{t.quotientLabel}:</span>{' '}
           <span className="font-bold text-indigo-700">{quotient.toString()}</span>
         </div>
       </div>

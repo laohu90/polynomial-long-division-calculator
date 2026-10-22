@@ -111,7 +111,7 @@ export default function App() {
       const divisorPoly = Polynomial.parse(dvrInput, dividendPoly.variable);
 
       if (divisorPoly.isZero()) {
-        setCalcError('Divisor cannot be zero! Division by zero is undefined.');
+        setCalcError(t.errorZeroDivisor);
         return;
       }
 
@@ -126,7 +126,7 @@ export default function App() {
       setCurrentStepIndex(0);
       setShowAllSteps(true);
     } catch (err: any) {
-      setCalcError(err.message || 'Invalid polynomial syntax. Please check exponents and signs.');
+      setCalcError(err.message || t.errorInvalidSyntax);
     }
   };
 
@@ -139,10 +139,7 @@ export default function App() {
       const res = performCompletingTheSquare(poly);
       setCompletingSquareResult(res);
     } catch (err: any) {
-      setCalcError(
-        err.message ||
-          'Please enter a valid quadratic polynomial with degree 2 (e.g. 2x^2 + 8x - 10).'
-      );
+      setCalcError(err.message || t.errorQuadraticDegree);
     }
   };
 
@@ -845,6 +842,7 @@ export default function App() {
                 currentStepIndex={currentStepIndex}
                 showAllSteps={showAllSteps}
                 showPadding={showPadding}
+                currentLang={lang}
               />
             )}
 
@@ -853,11 +851,12 @@ export default function App() {
                 result={divisionResult}
                 currentStepIndex={currentStepIndex}
                 showAllSteps={showAllSteps}
+                currentLang={lang}
               />
             )}
 
             {activeDivisionTab === 'synthetic' && syntheticResult && (
-              <SyntheticDivisionView synthetic={syntheticResult} />
+              <SyntheticDivisionView synthetic={syntheticResult} currentLang={lang} />
             )}
 
             {activeDivisionTab === 'verification' && (
@@ -872,7 +871,7 @@ export default function App() {
 
         {/* RESULTS SECTION FOR COMPLETING THE SQUARE */}
         {mode === 'completing_square' && completingSquareResult && !calcError && (
-          <CompletingTheSquareView result={completingSquareResult} />
+          <CompletingTheSquareView result={completingSquareResult} currentLang={lang} />
         )}
 
         {/* CURATED PRACTICE PROBLEMS & QUIZ MODE */}
