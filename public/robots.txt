@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ais-dev-rj5kfhy2qkdgqpudujwxjc-783093195399.asia-southeast1.run.app/sitemap.xml
+Sitemap: https://polynomial-long-division-calculator.formulacalckit.com/sitemap.xml
