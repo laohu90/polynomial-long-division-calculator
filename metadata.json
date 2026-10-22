@@ -1,0 +1,6 @@
+{
+  "name": "Polynomial Long Division Calculator with Steps",
+  "description": "Free step-by-step polynomial long division, synthetic division, and completing the square calculator with detailed algebraic work, bus-stop bracket view, and quotient verification.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
