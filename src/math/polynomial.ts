@@ -7,8 +7,11 @@ export interface Term {
 
 export class Polynomial {
   readonly terms: Term[]; // sorted by power descending, no zero terms (unless entire poly is 0)
+  readonly variable: string;
 
-  constructor(terms: Term[] = []) {
+  constructor(terms: Term[] = [], variable: string = 'x') {
+    this.variable = variable || 'x';
+
     // Combine like terms and remove zeros
     const powerMap = new Map<number, Fraction>();
     for (const t of terms) {
@@ -33,13 +36,13 @@ export class Polynomial {
     }
   }
 
-  static zero(): Polynomial {
-    return new Polynomial([{ power: 0, coef: Fraction.zero() }]);
+  static zero(variable: string = 'x'): Polynomial {
+    return new Polynomial([{ power: 0, coef: Fraction.zero() }], variable);
   }
 
-  static term(coef: Fraction | number | bigint, power: number): Polynomial {
+  static term(coef: Fraction | number | bigint, power: number, variable: string = 'x'): Polynomial {
     const c = coef instanceof Fraction ? coef : new Fraction(coef);
-    return new Polynomial([{ coef: c, power }]);
+    return new Polynomial([{ coef: c, power }], variable);
   }
 
   get degree(): number {
@@ -82,7 +85,7 @@ export class Polynomial {
   }
 
   add(other: Polynomial): Polynomial {
-    return new Polynomial([...this.terms, ...other.terms]);
+    return new Polynomial([...this.terms, ...other.terms], this.variable);
   }
 
   sub(other: Polynomial): Polynomial {
@@ -90,11 +93,11 @@ export class Polynomial {
       power: t.power,
       coef: t.coef.negate(),
     }));
-    return new Polynomial([...this.terms, ...negOther]);
+    return new Polynomial([...this.terms, ...negOther], this.variable);
   }
 
   mul(other: Polynomial): Polynomial {
-    if (this.isZero() || other.isZero()) return Polynomial.zero();
+    if (this.isZero() || other.isZero()) return Polynomial.zero(this.variable);
     const newTerms: Term[] = [];
     for (const t1 of this.terms) {
       for (const t2 of other.terms) {
@@ -104,28 +107,27 @@ export class Polynomial {
         });
       }
     }
-    return new Polynomial(newTerms);
+    return new Polynomial(newTerms, this.variable);
   }
 
   mulTerm(term: Term): Polynomial {
-    if (term.coef.isZero() || this.isZero()) return Polynomial.zero();
+    if (term.coef.isZero() || this.isZero()) return Polynomial.zero(this.variable);
     return new Polynomial(
       this.terms.map((t) => ({
         power: t.power + term.power,
         coef: t.coef.mul(term.coef),
-      }))
+      })),
+      this.variable
     );
   }
 
   negate(): Polynomial {
     return new Polynomial(
-      this.terms.map((t) => ({ power: t.power, coef: t.coef.negate() }))
+      this.terms.map((t) => ({ power: t.power, coef: t.coef.negate() })),
+      this.variable
     );
   }
 
-  /**
-   * Evaluates polynomial at x = val (using Fraction)
-   */
   evaluate(val: Fraction): Fraction {
     let result = Fraction.zero();
     for (const t of this.terms) {
@@ -138,9 +140,6 @@ export class Polynomial {
     return result;
   }
 
-  /**
-   * Format single term to string, e.g. -3x^2, + x, - 5
-   */
   static formatTerm(term: Term, isLeading: boolean, variable: string = 'x'): string {
     const { coef, power } = term;
     if (coef.isZero()) return isLeading ? '0' : '';
@@ -166,14 +165,16 @@ export class Polynomial {
     return `${signStr}${coefStr}${varStr}`;
   }
 
-  toString(variable: string = 'x'): string {
+  toString(customVar?: string): string {
+    const v = customVar || this.variable;
     if (this.isZero()) return '0';
     return this.terms
-      .map((t, idx) => Polynomial.formatTerm(t, idx === 0, variable))
+      .map((t, idx) => Polynomial.formatTerm(t, idx === 0, v))
       .join('');
   }
 
-  toHtmlString(variable: string = 'x'): string {
+  toHtmlString(customVar?: string): string {
+    const v = customVar || this.variable;
     if (this.isZero()) return '0';
     return this.terms
       .map((t, idx) => {
@@ -190,27 +191,36 @@ export class Polynomial {
 
         let varStr = '';
         if (power === 1) {
-          varStr = variable;
+          varStr = v;
         } else if (power > 1) {
-          varStr = `${variable}<sup>${power}</sup>`;
+          varStr = `${v}<sup>${power}</sup>`;
         }
         return `${signStr}${coefStr}${varStr}`;
       })
       .join('');
   }
 
-  toPaddedString(variable: string = 'x'): string {
+  toPaddedString(customVar?: string): string {
+    const v = customVar || this.variable;
     if (this.isZero()) return '0';
     const dense = this.getDenseCoefficients();
     return dense
       .map((t, idx) => {
         if (t.coef.isZero()) {
-          const varStr = t.power === 0 ? '0' : t.power === 1 ? `0${variable}` : `0${variable}^${t.power}`;
+          const varStr = t.power === 0 ? '0' : t.power === 1 ? `0${v}` : `0${v}^${t.power}`;
           return idx === 0 ? varStr : ` + ${varStr}`;
         }
-        return Polynomial.formatTerm(t, idx === 0, variable);
+        return Polynomial.formatTerm(t, idx === 0, v);
       })
       .join('');
+  }
+
+  /**
+   * Detects the primary variable letter in input string (e.g. x, y, t, z, u, n).
+   */
+  static detectVariable(input: string): string {
+    const match = input.match(/[a-zA-Z]/);
+    return match ? match[0].toLowerCase() : 'x';
   }
 
   /**
@@ -220,9 +230,11 @@ export class Polynomial {
    * "-x^2 + 3/4x - 1"
    * "(2x - 5)"
    */
-  static parse(input: string, variable: string = 'x'): Polynomial {
+  static parse(input: string, explicitVar?: string): Polynomial {
     let clean = input.trim();
-    if (!clean) return Polynomial.zero();
+    if (!clean) return Polynomial.zero(explicitVar || 'x');
+
+    const detectedVar = explicitVar || Polynomial.detectVariable(clean);
 
     // Strip outer parentheses
     if (clean.startsWith('(') && clean.endsWith(')')) {
@@ -234,18 +246,33 @@ export class Polynomial {
     // Normalize spaces
     clean = clean.replace(/\s+/g, ' ');
 
-    // Normalize variable to lower-case 'x'
-    const varRegex = new RegExp(variable, 'gi');
+    // Normalize user's variable to lowercase 'x' for parsing
+    const varRegex = new RegExp(detectedVar, 'gi');
     clean = clean.replace(varRegex, 'x');
 
-    // Tokenize terms: match signed chunks like "+3x^2", "-x", "4"
-    // Insert '+' before '-' if not preceded by an operator or at start
+    // Tokenize terms: insert spaces around '+' and '-' unless part of fraction or exponent
     let formatted = '';
     for (let i = 0; i < clean.length; i++) {
       const ch = clean[i];
-      if (ch === '-' && i > 0 && clean[i - 1] !== ' ' && clean[i - 1] !== '+' && clean[i - 1] !== '-' && clean[i - 1] !== '^' && clean[i - 1] !== '/') {
+      if (
+        ch === '-' &&
+        i > 0 &&
+        clean[i - 1] !== ' ' &&
+        clean[i - 1] !== '+' &&
+        clean[i - 1] !== '-' &&
+        clean[i - 1] !== '^' &&
+        clean[i - 1] !== '/' &&
+        clean[i - 1] !== '('
+      ) {
         formatted += ' -';
-      } else if (ch === '+' && i > 0 && clean[i - 1] !== ' ' && clean[i - 1] !== '^' && clean[i - 1] !== '/') {
+      } else if (
+        ch === '+' &&
+        i > 0 &&
+        clean[i - 1] !== ' ' &&
+        clean[i - 1] !== '^' &&
+        clean[i - 1] !== '/' &&
+        clean[i - 1] !== '('
+      ) {
         formatted += ' +';
       } else {
         formatted += ch;
@@ -270,7 +297,7 @@ export class Polynomial {
       if (!tok) continue;
 
       if (!tok.includes('x')) {
-        // Pure constant
+        // Pure constant (could be a fraction like 3/4 or integer 5)
         const frac = Fraction.fromString(tok);
         terms.push({
           power: 0,
@@ -296,6 +323,10 @@ export class Polynomial {
         } else if (coefStr === '-') {
           frac = Fraction.one().negate();
         } else {
+          // If coefficient has parentheses like (1/2)x
+          if (coefStr.startsWith('(') && coefStr.endsWith(')')) {
+            coefStr = coefStr.slice(1, -1);
+          }
           frac = Fraction.fromString(coefStr);
         }
 
@@ -306,6 +337,6 @@ export class Polynomial {
       }
     }
 
-    return new Polynomial(terms);
+    return new Polynomial(terms, detectedVar);
   }
 }

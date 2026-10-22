@@ -1,0 +1,16 @@
+{
+  "short_name": "PolyMath",
+  "name": "Polynomial Long Division & Completing the Square Calculator",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "display": "standalone",
+  "orientation": "portrait"
+}

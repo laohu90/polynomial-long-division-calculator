@@ -21,6 +21,7 @@ import {
   ChevronRight,
   AlertCircle,
   ExternalLink,
+  Target,
 } from 'lucide-react';
 import { Polynomial } from './math/polynomial';
 import { performPolynomialLongDivision, LongDivisionResult } from './math/longDivision';
@@ -35,11 +36,37 @@ import { StepByStepExplanation } from './components/StepByStepExplanation';
 import { SlantAsymptoteView } from './components/SlantAsymptoteView';
 import { MathKeypad } from './components/MathKeypad';
 import { EducationalGuide } from './components/EducationalGuide';
+import { PracticeProblems } from './components/PracticeProblems';
 
 export default function App() {
   // Localization
   const [lang, setLang] = useState<Language>('en');
   const t = translations[lang];
+
+  // Dynamically update document title, meta description, and html lang attribute for Google SEO
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    const titles: Record<Language, string> = {
+      en: 'Polynomial Long Division Calculator with Steps | Free Step-by-Step Solver',
+      es: 'Calculadora de División de Polinomios Paso a Paso | PolyMath Pro',
+      fr: 'Calculatrice de Division Polynomiale avec Étapes | PolyMath Pro',
+      pt: 'Calculadora de Divisão de Polinômios Passo a Passo | PolyMath Pro',
+      zh: '多项式长除法计算器 带步骤与配方法拆解过程 | PolyMath Pro',
+    };
+    const descriptions: Record<Language, string> = {
+      en: 'Free step-by-step polynomial long division, synthetic division, and completing the square calculator with US bus-stop bracket view and verification.',
+      es: 'Calculadora gratuita paso a paso de división de polinomios y método de completar el cuadrado con formato tradicional de galera.',
+      fr: 'Calculatrice gratuite étape par étape pour la division euclidienne de polynômes et la forme canonique.',
+      pt: 'Calculadora passo a passo de divisão de polinômios pelo método da chave e dispositivo de Briot-Ruffini.',
+      zh: '高中代数与微积分先修神器！提供经典竖式排版、变号相减高亮、缺失项补零、综合除法与配方法拆解全套步骤。',
+    };
+
+    document.title = titles[lang] || titles.en;
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.setAttribute('content', descriptions[lang] || descriptions.en);
+    }
+  }, [lang]);
 
   // Mode: 'division' or 'completing_square'
   const [mode, setMode] = useState<'division' | 'completing_square'>('division');
@@ -74,11 +101,14 @@ export default function App() {
   const [calcError, setCalcError] = useState<string | null>(null);
 
   // Calculate division
-  const handleCalculateDivision = () => {
+  const handleCalculateDivision = (customDividend?: string, customDivisor?: string) => {
     try {
       setCalcError(null);
-      const dividendPoly = Polynomial.parse(dividendInput);
-      const divisorPoly = Polynomial.parse(divisorInput);
+      const dInput = customDividend !== undefined ? customDividend : dividendInput;
+      const dvrInput = customDivisor !== undefined ? customDivisor : divisorInput;
+
+      const dividendPoly = Polynomial.parse(dInput);
+      const divisorPoly = Polynomial.parse(dvrInput, dividendPoly.variable);
 
       if (divisorPoly.isZero()) {
         setCalcError('Divisor cannot be zero! Division by zero is undefined.');
@@ -101,10 +131,11 @@ export default function App() {
   };
 
   // Calculate Completing the Square
-  const handleCalculateCompletingSquare = () => {
+  const handleCalculateCompletingSquare = (customQuadratic?: string) => {
     try {
       setCalcError(null);
-      const poly = Polynomial.parse(quadraticInput);
+      const qInput = customQuadratic !== undefined ? customQuadratic : quadraticInput;
+      const poly = Polynomial.parse(qInput);
       const res = performCompletingTheSquare(poly);
       setCompletingSquareResult(res);
     } catch (err: any) {
@@ -249,9 +280,23 @@ export default function App() {
     window.print();
   };
 
+  const handleLoadPracticeProblem = (prob: any) => {
+    if (prob.targetMode === 'division') {
+      setMode('division');
+      setDividendInput(prob.dividend);
+      setDivisorInput(prob.divisor);
+      handleCalculateDivision(prob.dividend, prob.divisor);
+    } else {
+      setMode('completing_square');
+      setQuadraticInput(prob.quadratic);
+      handleCalculateCompletingSquare(prob.quadratic);
+    }
+    window.scrollTo({ top: 120, behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-white text-slate-800 flex flex-col font-sans">
-      {/* TOP NOTIFICATION / SECURITY BANNER */}
+      {/* TOP HEADER */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-40 backdrop-blur-md bg-white/95">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
           {/* Brand Logo */}
@@ -370,7 +415,7 @@ export default function App() {
                       onClick={() => {
                         setDividendInput(p.dividend);
                         setDivisorInput(p.divisor);
-                        setTimeout(handleCalculateDivision, 50);
+                        handleCalculateDivision(p.dividend, p.divisor);
                       }}
                       className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 border border-slate-200 text-slate-700 transition"
                     >
@@ -383,7 +428,7 @@ export default function App() {
                       type="button"
                       onClick={() => {
                         setQuadraticInput(p.formula);
-                        setTimeout(handleCalculateCompletingSquare, 50);
+                        handleCalculateCompletingSquare(p.formula);
                       }}
                       className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 border border-slate-200 text-slate-700 transition"
                     >
@@ -413,7 +458,7 @@ export default function App() {
                     />
                   </div>
                   <span className="text-[11px] text-slate-400 mt-1 block">
-                    Supported: Exponents like <code className="text-slate-600">x^3</code>, coefficients, fractions like <code className="text-slate-600">1/2x^2</code>
+                    Supported: Exponents like <code className="text-slate-600">x^3</code>, coefficients, fractions like <code className="text-slate-600">1/2x^2</code>, and custom variables like <code className="text-slate-600">t</code>
                   </span>
                 </div>
 
@@ -520,8 +565,8 @@ export default function App() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={
-                  mode === 'division' ? handleCalculateDivision : handleCalculateCompletingSquare
+                onClick={() =>
+                  mode === 'division' ? handleCalculateDivision() : handleCalculateCompletingSquare()
                 }
                 className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm sm:text-base shadow-sm shadow-indigo-200 transition-all active:scale-98 flex items-center gap-2 cursor-pointer"
               >
@@ -742,7 +787,7 @@ export default function App() {
               )}
             </div>
 
-            {/* STEP STEPPER CONTROLLER (If on bus-stop tab) */}
+            {/* STEP STEPPER CONTROLLER */}
             {activeDivisionTab === 'busstop' && divisionResult.steps.length > 0 && (
               <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 border border-slate-200 p-3.5 rounded-2xl">
                 <div className="flex items-center gap-2">
@@ -830,6 +875,12 @@ export default function App() {
           <CompletingTheSquareView result={completingSquareResult} />
         )}
 
+        {/* CURATED PRACTICE PROBLEMS & QUIZ MODE */}
+        <PracticeProblems
+          onLoadProblem={handleLoadPracticeProblem}
+          currentLang={lang}
+        />
+
         {/* EDUCATIONAL GUIDE & FAQ (SEO OPTIMIZED) */}
         <EducationalGuide currentLang={lang} />
       </main>
@@ -853,6 +904,8 @@ export default function App() {
             <a href="#root" className="hover:text-indigo-600 transition">Back to Top</a>
             <span className="text-slate-300">•</span>
             <a href="#faqs" className="hover:text-indigo-600 transition">Math FAQs</a>
+            <span className="text-slate-300">•</span>
+            <a href="/sitemap.xml" className="hover:text-indigo-600 transition">Sitemap</a>
           </div>
         </div>
       </footer>
