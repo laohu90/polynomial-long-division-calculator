@@ -361,7 +361,13 @@ export const LongDivisionSolver: React.FC<LongDivisionSolverProps> = ({ result, 
                         <td className="border-r-2 border-slate-600"></td>
                         {result.ruffini.multRow.map((val, i) => (
                           <td key={i} className="py-2 px-4 text-emerald-400">
-                            {i === 0 ? '' : `+ ${val.toString()}`}
+                            {i === 0
+                              ? ''
+                              : val.isNegative()
+                              ? val.toString()
+                              : val.isZero()
+                              ? '0'
+                              : `+ ${val.toString()}`}
                           </td>
                         ))}
                       </tr>

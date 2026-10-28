@@ -496,20 +496,27 @@ export function performLongDivision(dividend: Polynomial, divisor: Polynomial): 
 
     const newRem = currentRem.sub(product);
 
-    // Wording fix for Issue #7: Check if there's an actual next term in the original dividend to bring down
+    // Wording refinement for Issue #7: Check if there is an un-lowered term in original dividend to bring down
     let broughtDownTerm: { coeff: Fraction; power: number } | null = null;
-    let nextPowerToBringDown = leadRemPower - 1;
-    if (nextPowerToBringDown >= 0 && nextPowerToBringDown < dividend.degree) {
-      // Check if original dividend has a non-zero term at this power that wasn't included yet
-      const nextCoeff = dividend.getCoeff(nextPowerToBringDown);
-      broughtDownTerm = { coeff: nextCoeff, power: nextPowerToBringDown };
+    const targetBringDownPower = leadRemPower - 1;
+    if (
+      targetBringDownPower >= 0 &&
+      currentRem.getCoeff(targetBringDownPower).isZero() &&
+      !dividend.getCoeff(targetBringDownPower).isZero()
+    ) {
+      broughtDownTerm = { coeff: dividend.getCoeff(targetBringDownPower), power: targetBringDownPower };
     }
 
     const qTermStr = qCoeff.toSignedTermString('x', qPower, true);
     const prodStr = product.toString();
 
-    const explanationEn = `Divide leading term ${leadRemCoeff.toSignedTermString('x', leadRemPower, true)} by ${leadDivCoeff.toSignedTermString('x', leadDivPower, true)} to get ${qTermStr}. Multiply divisor by ${qTermStr} to get ${prodStr}, then subtract (flipping signs).`;
-    const explanationZh = `将首项 ${leadRemCoeff.toSignedTermString('x', leadRemPower, true)} 除以 ${leadDivCoeff.toSignedTermString('x', leadDivPower, true)} 得到 ${qTermStr}。用 ${qTermStr} 乘以除式得到 ${prodStr}，然后相减（符号反转）。`;
+    let explanationEn = `1. Divide: ${leadRemCoeff.toSignedTermString('x', leadRemPower, true)} ÷ ${leadDivCoeff.toSignedTermString('x', leadDivPower, true)} = ${qTermStr}. 2. Multiply: (${qTermStr}) × (${divisor.toString()}) = ${prodStr}. 3. Subtract: Subtract (${prodStr}) from ${currentRem.toString()} to get remainder ${newRem.toString()}.`;
+    let explanationZh = `1. 一除：首项 ${leadRemCoeff.toSignedTermString('x', leadRemPower, true)} ÷ ${leadDivCoeff.toSignedTermString('x', leadDivPower, true)} = ${qTermStr}。 2. 二乘：用 ${qTermStr} 乘以除式 (${divisor.toString()}) 得到 ${prodStr}。 3. 三减：从余式 ${currentRem.toString()} 中减去 (${prodStr}) 得到新余式 ${newRem.toString()}。`;
+
+    if (broughtDownTerm) {
+      explanationEn += ` 4. Bring down next term ${broughtDownTerm.coeff.toSignedTermString('x', broughtDownTerm.power, true)} from dividend P(x).`;
+      explanationZh += ` 4. 四拉：从被除式 P(x) 中落下下一项 ${broughtDownTerm.coeff.toSignedTermString('x', broughtDownTerm.power, true)}。`;
+    }
 
     steps.push({
       stepIndex,

@@ -5,15 +5,75 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Polynomial Long Division & Completing the Square Calculator</title>
     <meta name="description" content="Step-by-step polynomial long division, synthetic division (Ruffini), and completing the square calculator with exact fraction math and interactive graphs." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://laohu90.github.io/polynomial-long-division-calculator/" />
+
+    <!-- OpenGraph Social Cards -->
+    <meta property="og:type" content="website" />
     <meta property="og:title" content="Polynomial Long Division & Completing the Square Calculator" />
     <meta property="og:description" content="Step-by-step polynomial long division, synthetic division (Ruffini), and completing the square calculator with exact fraction math and interactive graphs." />
-    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://laohu90.github.io/polynomial-long-division-calculator/" />
+    <meta property="og:site_name" content="Polynomial Math Suite" />
+
+    <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossOrigin="anonymous" />
+    <meta name="twitter:title" content="Polynomial Long Division & Completing the Square Calculator" />
+    <meta name="twitter:description" content="Step-by-step polynomial long division, synthetic division (Ruffini), and completing the square calculator with exact fraction math and interactive graphs." />
+
+    <!-- Schema.org WebApplication JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Polynomial Long Division & Completing the Square Calculator",
+      "url": "https://laohu90.github.io/polynomial-long-division-calculator/",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "All",
+      "description": "Interactive step-by-step polynomial long division, Ruffini synthetic division, and completing the square quadratic solver with exact rational fraction arithmetic and graphs.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+
+    <!-- Schema.org FAQPage JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How does polynomial long division work?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Polynomial long division divides a dividend P(x) by a divisor D(x) to find a quotient Q(x) and remainder R(x) satisfying P(x) = D(x)Q(x) + R(x) where degree(R) < degree(D)."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "When can synthetic division (Ruffini's Rule) be used?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Synthetic division can be used whenever the divisor polynomial is a linear term of the form (x - c) or (ax + b)."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do you complete the square for ax^2 + bx + c when a != 1?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Factor out 'a' from the x^2 and x terms, then add and subtract ((b/a)/2)^2 inside the bracket, rewriting as a(x + b/2a)^2 + k."
+          }
+        }
+      ]
+    }
+    </script>
   </head>
   <body class="bg-slate-900 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white min-h-screen">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

@@ -14,10 +14,9 @@ import {
   Keyboard as KeyboardIcon,
   AlertCircle,
   Sparkles,
-  RotateCcw,
   Link as LinkIcon,
   Check,
-  Zap,
+  HelpCircle,
 } from 'lucide-react';
 
 export default function App() {
@@ -39,39 +38,58 @@ export default function App() {
   const [divisionResult, setDivisionResult] = useState<LongDivisionResult | null>(null);
   const [squareResult, setSquareResult] = useState<CompletingSquareResult | null>(null);
 
-  // Error State (Fixing Issue #8 accessibility role="alert")
+  // Error & Status State
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  // Copy share URL toast
   const [shareToast, setShareToast] = useState<string | null>(null);
 
   const t = translations[lang];
 
-  // Sync URL hash / query param with active tool & document title (Fixing Issue #5!)
+  // 1. Initial State Restoration from URL search params & hash (Fixing Issue #1!)
   useEffect(() => {
-    const handleHashOrQuery = () => {
-      const hash = window.location.hash.replace('#', '');
+    const parseUrlParams = () => {
       const searchParams = new URLSearchParams(window.location.search);
+      const hash = window.location.hash.replace('#', '');
+
       const toolParam = searchParams.get('tool') || hash;
+      const pParam = searchParams.get('p');
+      const dParam = searchParams.get('d');
 
       if (toolParam === 'completing-the-square') {
         setActiveTool('completing-the-square');
         document.title = 'Completing the Square Calculator with Steps & Graph | Math Suite';
+        if (pParam) {
+          setQuadraticInput(pParam);
+        }
       } else {
         setActiveTool('long-division');
         document.title = 'Polynomial Long Division Calculator with Steps & Ruffini | Math Suite';
+        if (pParam) setDividendInput(pParam);
+        if (dParam) setDivisorInput(dParam);
       }
     };
 
-    handleHashOrQuery();
-    window.addEventListener('popstate', handleHashOrQuery);
-    return () => window.removeEventListener('popstate', handleHashOrQuery);
+    parseUrlParams();
   }, []);
+
+  // 2. Synchronize URL query search parameters whenever inputs or tool state changes (Fixing Issue #1!)
+  useEffect(() => {
+    const searchParams = new URLSearchParams();
+    searchParams.set('tool', activeTool);
+
+    if (activeTool === 'long-division') {
+      if (dividendInput.trim()) searchParams.set('p', dividendInput.trim());
+      if (divisorInput.trim()) searchParams.set('d', divisorInput.trim());
+    } else {
+      if (quadraticInput.trim()) searchParams.set('p', quadraticInput.trim());
+    }
+
+    const newUrl = `${window.location.pathname}?${searchParams.toString()}#${activeTool}`;
+    window.history.replaceState(null, '', newUrl);
+  }, [activeTool, dividendInput, divisorInput, quadraticInput]);
 
   const switchTool = (tool: 'long-division' | 'completing-the-square') => {
     setActiveTool(tool);
     setErrorMessage(null);
-    window.location.hash = tool;
 
     if (tool === 'completing-the-square') {
       document.title = 'Completing the Square Calculator with Steps & Graph | Math Suite';
@@ -84,12 +102,17 @@ export default function App() {
   const handleCalculate = () => {
     setErrorMessage(null);
 
-    try {
-      if (activeTool === 'long-division') {
+    if (activeTool === 'long-division') {
+      if (!dividendInput.trim() || !divisorInput.trim()) {
+        setDivisionResult(null);
+        return;
+      }
+
+      try {
         const dividend = Polynomial.parse(dividendInput);
         const divisor = Polynomial.parse(divisorInput);
 
-        // Divisor zero check (Fixing Issue #3!)
+        // Divisor zero check (Fixing Issue #3)
         if (divisor.isZero()) {
           throw new Error(
             lang === 'zh'
@@ -100,22 +123,32 @@ export default function App() {
 
         const res = performLongDivision(dividend, divisor);
         setDivisionResult(res);
-      } else {
+      } catch (err: any) {
+        setDivisionResult(null);
+        setErrorMessage(
+          err?.message || (lang === 'zh' ? '输入数据解析错误，请检查输入表达式。' : 'Error parsing input expression. Please check format.')
+        );
+      }
+    } else {
+      if (!quadraticInput.trim()) {
+        setSquareResult(null);
+        return;
+      }
+
+      try {
         const poly = Polynomial.parse(quadraticInput);
         const res = performCompletingSquare(poly);
         setSquareResult(res);
+      } catch (err: any) {
+        setSquareResult(null);
+        setErrorMessage(
+          err?.message || (lang === 'zh' ? '输入数据解析错误，请检查输入表达式。' : 'Error parsing input expression. Please check format.')
+        );
       }
-    } catch (err: any) {
-      // Display friendly validation error (Fixing Issue #1, #2, #3, #8!)
-      setDivisionResult(null);
-      setSquareResult(null);
-      setErrorMessage(
-        err?.message || (lang === 'zh' ? '输入数据解析错误，请检查输入表达式。' : 'Error parsing input expression. Please check format.')
-      );
     }
   };
 
-  // Calculate on initial load and input change
+  // Recalculate on input changes
   useEffect(() => {
     handleCalculate();
   }, [dividendInput, divisorInput, quadraticInput, activeTool, lang]);
@@ -151,11 +184,12 @@ export default function App() {
     }
   };
 
+  // Fix Issue #1: Copy Share Link containing exact P(x) & D(x) query parameters!
   const handleShareLink = async () => {
-    const url = `${window.location.origin}${window.location.pathname}#${activeTool}`;
-    const ok = await copyToClipboard(url);
+    const fullShareUrl = window.location.href;
+    const ok = await copyToClipboard(fullShareUrl);
     if (ok) {
-      setShareToast(t.copySuccess);
+      setShareToast(lang === 'zh' ? '包含当前多项式的分享链接已复制！' : 'Share link with current polynomial copied!');
     } else {
       setShareToast(t.copyFailed);
     }
@@ -177,6 +211,11 @@ export default function App() {
     { label: 'x² - 6x + 5', val: 'x² - 6x + 5' },
     { label: '2x² - 4x + 10', val: '2x² - 4x + 10' },
   ];
+
+  const isInputEmpty =
+    activeTool === 'long-division'
+      ? !dividendInput.trim() || !divisorInput.trim()
+      : !quadraticInput.trim();
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
@@ -233,7 +272,7 @@ export default function App() {
 
       {/* Main Body */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8">
-        {/* Tool Switcher Tabs (Fixing Issue #5 URL & title sync!) */}
+        {/* Tool Switcher Tabs */}
         <div className="flex items-center justify-center mb-8">
           <div className="inline-flex p-1.5 bg-slate-900 border border-slate-800 rounded-2xl shadow-inner max-w-full overflow-x-auto">
             <button
@@ -383,7 +422,7 @@ export default function App() {
           )}
         </div>
 
-        {/* Accessibility Error Alert Banner (Fixing Issue #1, #2, #3, #8!) */}
+        {/* Accessibility Error Alert Banner (Fixing Issue #3 & #8) */}
         {errorMessage && (
           <div
             role="alert"
@@ -395,6 +434,38 @@ export default function App() {
               <h3 className="font-bold text-red-300">{t.errorAlertTitle}</h3>
               <p className="leading-relaxed">{errorMessage}</p>
             </div>
+          </div>
+        )}
+
+        {/* Empty Input Guidance Box (Fixing Issue #4!) */}
+        {isInputEmpty && !errorMessage && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="mb-8 p-6 bg-slate-900/60 border border-dashed border-slate-700 rounded-2xl text-center shadow-lg"
+          >
+            <HelpCircle className="w-8 h-8 text-indigo-400 mx-auto mb-2 opacity-80" />
+            <h3 className="text-sm sm:text-base font-bold text-slate-200 mb-1">
+              {lang === 'zh' ? '请输入多项式进行计算' : 'Please Enter a Polynomial Expression'}
+            </h3>
+            <p className="text-xs text-slate-400 mb-4 max-w-md mx-auto leading-relaxed">
+              {lang === 'zh'
+                ? '在上方输入框中填入多项式表达式，或点击下方按钮载入经典求解例题。'
+                : 'Type a polynomial expression into the input field above, or click below to load a sample problem.'}
+            </p>
+            <button
+              onClick={() => {
+                if (activeTool === 'long-division') {
+                  setDividendInput('2x³ - x² - 7x + 2');
+                  setDivisorInput('x - 2');
+                } else {
+                  setQuadraticInput('3x² + 12x + 7');
+                }
+              }}
+              className="px-4 py-2 bg-indigo-600/80 hover:bg-indigo-600 text-white text-xs font-semibold rounded-xl transition shadow-md active:scale-95"
+            >
+              {lang === 'zh' ? '载入默认例题' : 'Load Default Example'}
+            </button>
           </div>
         )}
 
