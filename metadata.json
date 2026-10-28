@@ -1,0 +1,6 @@
+{
+  "name": "Polynomial Long Division & Completing the Square Calculator",
+  "description": "Step-by-step polynomial long division, synthetic division (Ruffini), and completing the square calculator with exact fraction math and interactive graphs.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
